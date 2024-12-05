@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geolocalização</title>
     <script>
+        // Função para obter localização do navegador
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(showPosition, showError);
@@ -13,37 +14,59 @@
             }
         }
 
+        // Função para processar as coordenadas GPS
         function showPosition(position) {
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
-            alert(`Latitude: ${latitude}, Longitude: ${longitude}`);
-            // Enviar dados para o servidor
-            fetch('https://seu-servidor.com/geolocalizacao', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ latitude, longitude })
-            });
+
+            // Mostra as coordenadas no console
+            console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+
+            // Chama a API do Google para obter endereço
+            fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyBZjr1EUb9QUROvZP0W5zCXrr0Xcn62Lsw`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "OK") {
+                        const address = data.results[0].formatted_address;
+                        alert(`Endereço: ${address}`);
+                        console.log(`Endereço: ${address}`);
+
+                        // (Opcional) Enviar dados para um servidor
+                        fetch('https://seu-servidor.com/geolocalizacao', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ latitude, longitude, address })
+                        }).then(() => alert("Dados enviados com sucesso!"));
+                    } else {
+                        alert("Não foi possível obter o endereço.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao consultar a API do Google:", error);
+                });
         }
 
+        // Função para tratar erros de geolocalização
         function showError(error) {
             switch (error.code) {
                 case error.PERMISSION_DENIED:
-                    alert("Usuário negou a solicitação de geolocalização.");
+                    alert("Permissão negada pelo usuário.");
                     break;
                 case error.POSITION_UNAVAILABLE:
-                    alert("As informações de localização não estão disponíveis.");
+                    alert("Informações de localização indisponíveis.");
                     break;
                 case error.TIMEOUT:
-                    alert("A solicitação para obter a localização expirou.");
+                    alert("A solicitação de localização expirou.");
                     break;
                 case error.UNKNOWN_ERROR:
-                    alert("Ocorreu um erro desconhecido.");
+                    alert("Erro desconhecido.");
                     break;
             }
         }
     </script>
 </head>
 <body onload="getLocation()">
-    <h1>Obtendo sua localização...</h1>
+    <h1>Obtendo localização...</h1>
 </body>
 </html>
+
